@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Auth API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /auth/signup:
+    post:
+      summary: Sign up
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+  /auth/login:
+    post:
+      summary: Log in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      summary: Log out
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No content
+  /public/info:
+    get:
+      summary: Public info
+      responses:
+        '200':
+          description: OK
+  /protected/profile:
+    get:
+      summary: Protected profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+  /protected/dashboard:
+    get:
+      summary: Protected dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
