@@ -2,11 +2,11 @@ import Database from 'better-sqlite3';
 
 const db = new Database('jobs.db');
 db.pragma('journal_mode = WAL');
-
 export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS jobs (
       id TEXT PRIMARY KEY,
+      type TEXT DEFAULT 'process',
       status TEXT DEFAULT 'pending',
       input TEXT,
       result TEXT,
@@ -19,9 +19,9 @@ export function initDatabase() {
   `);
 }
 
-export function createJob(id, input) {
-  const stmt = db.prepare('INSERT INTO jobs (id, input, status) VALUES (?, ?, ?)');
-  stmt.run(id, input, 'pending');
+export function createJob(id, input, type = 'process') {
+  const stmt = db.prepare('INSERT INTO jobs (id, input, type, status) VALUES (?, ?, ?, ?)');
+  stmt.run(id, input, type, 'pending');
 }
 
 export function getJob(id) {

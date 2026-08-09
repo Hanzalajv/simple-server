@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { getJob, updateJob } from '../models/database.js';
+import { generateReport } from './report-generator.js';
 
 // Simulate a slow AI operation (5 seconds)
 async function slowAIProcess(input) {
@@ -18,21 +19,38 @@ async function slowAIProcess(input) {
 
 async function processJob(job) {
   console.log(`\n[WORKER] Processing job: ${job.id}`);
-  console.log(`  Input: ${job.input}`);
+  console.log(`  Type: ${job.type || 'process'}`);
   console.log(`  Attempt: ${job.retries + 1}/${job.max_retries}`);
-  
+
   try {
     updateJob(job.id, { status: 'processing' });
-    const result = await slowAIProcess(job.input);
+
+    let result;
+    if (job.type === 'report') {
+      // Generate a PDF report
+      console.log(`  [WORKER] Generating PDF report...`);
+      const reportPath = await generateReport(job.id);
+      result = reportPath;
+      console.log(`  [WORKER] Report saved: ${reportPath}`);
+    } else {
+      // Normal slow process
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      if (Math.random() < 0.1) {
+        throw new Error('AI service temporarily unavailable');
+      }
+      result = `Processed: ${job.input.toUpperCase()} (simulated AI response)`;
+    }
+
     updateJob(job.id, { status: 'completed', result, retries: job.retries + 1 });
-    console.log(`  [WORKER] Job ${job.id} completed successfully`);
+    console.log(`  [WORKER] Job ${job.id} completed`);
+
   } catch (err) {
     console.error(`  [WORKER] Job ${job.id} failed: ${err.message}`);
     const newRetries = job.retries + 1;
-    
+
     if (newRetries >= job.max_retries) {
       updateJob(job.id, { status: 'failed', error: err.message, retries: newRetries });
-      console.error(`  [WORKER] Job ${job.id} permanently failed after ${newRetries} attempts`);
+      console.error(`  [WORKER] Job ${job.id} permanently failed`);
     } else {
       updateJob(job.id, { status: 'pending', error: err.message, retries: newRetries });
       console.log(`  [WORKER] Job ${job.id} will retry (${newRetries}/${job.max_retries})`);

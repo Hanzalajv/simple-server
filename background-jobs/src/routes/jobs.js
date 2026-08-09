@@ -17,11 +17,25 @@ router.post('/', (req, res) => {
   
   console.log(`[API] Created job ${jobId} for input: "${input}"`);
   
-  // Return 202 Accepted — the job is queued, not done
   res.status(202).json({
     job_id: jobId,
     status: 'pending',
     message: 'Job accepted. Check /jobs/:id for status.',
+    check_url: `/jobs/${jobId}`
+  });
+});
+
+// POST /jobs/report — Create a PDF report job
+router.post('/report', (req, res) => {
+  const jobId = uuidv4();
+  createJob(jobId, 'PDF report generation', 'report');
+
+  console.log(`[API] Created report job ${jobId}`);
+
+  res.status(202).json({
+    job_id: jobId,
+    status: 'pending',
+    message: 'Report generation started. Check /jobs/:id for status.',
     check_url: `/jobs/${jobId}`
   });
 });
